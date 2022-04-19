@@ -1,34 +1,51 @@
 const { compareSync } = require("bcrypt");
 const pool = require("../../config/dbConfig");
+const bcrypt = require("bcryptjs");
+var jwt = require("jsonwebtoken");
+const {UserRoles} = require("./../../helper/enums");
+
 const userRepository = require("./userRepository");
 
 
 const loginUser = async(data) => {
-    // TODO: check if user exists from userRepo
-    const userExists = await userRepository.getUserByEmail(data.email);
-    if(userExists == null) {
-        throw new Error("Invalid user or password!");
-    }
-
-    const isPasswordEqual = compareSync(userExists.password, data.password);
-    if(isPasswordEqual) {
-        data.password = undefined;
-        const token = sign({result: data}, process.env.JWT_KEY, {
-            expiresIn:"1h"
-        });
-        return token;
-    } else {
-        throw new Error("Invalid user or password");
+    const {email, password} = data;
+    try {       
+        const isUserValid = await userRepository.getUserByEmail(email);
+        if(isUserValid.rowsCount===0) {
+            throw new Error("Invalid user or password!");
+        }
+        
+        const isPasswordEqual = await bcrypt.compare(password, isUserValid.rows[0].password);      
+        if(isPasswordEqual) {
+            let userId = await userRepository.getUserIdByEmail(email);
+            userId = userId.rows[0].id;
+            return userId;
+        } else {
+            throw new Error("Invalid user or password");
+        }
+    } catch (err) {
+        console.log("User service " + err.message);
+        throw err;
     }
 };
 
 const registerUser = async(user) => {
-    const userExists = await userRepository.getUserByEmail(user.email);
-    if (userExists != null) {
-        throw new Error("Email id already taken!");
+    
+    try {
+        const userExists = await userRepository.getUserByEmail(user.email).rowCount;
+        if (userExists) {
+            throw new Error("Email id already taken!");
+        }
+    } catch(err) {
+        console.log(err.message);
     }
+    
     try{
+        console.log(user);
         await userRepository.registerNewUser(user);
+        let userId = await userRepository.getUserIdByEmail(user.email);
+        userId = userId.rows[0].id;
+        return userId;
     } catch(err) {
         console.log("Register user - service: " + err.message);
         throw err;
@@ -36,22 +53,22 @@ const registerUser = async(user) => {
 }
 
 const deleteUserByAdmin = async(data) => {
-    const isAdmin = await userRepository.roleCheckHelper(data.userId) === UserRoles.ADMIN;
-    const userToBeDeletedExists = await userRepository.getUserById(data.deleteUserId) != null;
-
     try {
+        const {rows} = await userRepository.roleCheckHelper(data.userId);
+        const userToBeDeletedExists = await userRepository.getUserById(data.deleteUserId) != null;
+        const isAdmin = rows[0].roles;
+
         if(!userToBeDeletedExists) {
             throw new Error("User to be deleted doesn't exists!");
-        } else if (!isAdmin) {
+        } else if (isAdmin!=UserRoles.ADMIN) {
             throw new Error("Unauthorized access! Only admin allowed..")
         } else {
             await userRepository.deleteUserById(data.deleteUserId);
         }
     } catch (err) {
-        console.log(err.message);
+        console.log("deleteUserByAdmin service" + err.message);
         throw err;
     }
-
 }
 
 module.exports = {
