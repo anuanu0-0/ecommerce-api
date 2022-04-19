@@ -1,7 +1,9 @@
 const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
-
+const bcrypt = require("bcryptjs");
+var jwt = require("jsonwebtoken");
 const userService = require("./userService");
+require("dotenv").config();
 
 /**
  * Login existing user
@@ -17,19 +19,27 @@ const userService = require("./userService");
  *
  */
 const login = async(req, res) => {
-    let data = {};
-    data.email = req.body.email;
-    data.password = req.body.password;
 
+    const {email, password} = req.body;
+    console.log(req.body)
+    let data = {
+        email : email,
+        password : password
+    };
+    console.log(data);
     try{
-        const authToken = await userService.loginUser(data);
+        const userId = await userService.loginUser(data);
+        const authToken = jwt.sign({email, userId}, process.env.JWT_KEY, {
+            expiresIn:"5h"
+        });
+        console.log(authToken);
         res.status(200).json({
             success: 1,
             message: "Logged in successfully",
             token: authToken
         })
     } catch(err) {
-        console.log(err.message);
+        console.log(" User Controller:" + err.message);
         res.status(401).json({
             success: 0,
             message: err.message
@@ -50,15 +60,34 @@ const login = async(req, res) => {
  *
  */
 const register = async(req, res) => {
-    const user = req.body;
-    const salt = genSaltSync(10);
-    user.password = hashSync(user.password, salt);
+    const { name, email, password, role } = req.body;
+
+    let user = {
+        name, email, password, role
+    }
+
     try {
-        await userService.registerUser(user);
+    /***
+     * const salt = await genSaltSync(10);
+     * user.password = await hashSync(password, salt);
+     * */    
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        user.password = hashedPassword;
+
+    }
+    catch(err) {
+        console.log(err.message);
+    }
+
+    try {
+        const userId = await userService.registerUser(user);
+        const token = jwt.sign({email, userId}, process.env.JWT_KEY);
         res.status(200).json({
             success: 1,
             message: "User created successfully!",
-            // token
+            token
         });
     } catch(err) {
         console.log(err.message);
@@ -88,10 +117,12 @@ const register = async(req, res) => {
  *
  */
 const deleteUser = async(req, res) => {
-    let data = {};
-    // TODO: Get from token
-    data.userId = req.body.userId;
-    data.deleteUserId = req.params.deleteUserId;
+    let data = {
+        userId : req.userId,
+        deleteUserId : req.params.userId
+    };
+
+    console.log(data);
 
     try {
         await userService.deleteUserByAdmin(data);
