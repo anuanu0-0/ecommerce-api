@@ -1,45 +1,43 @@
 const pool = require("../../config/dbConfig");
 
-const getUserById = async(userId) => {
-    return pool.query(`select u from User u where id = ?`, [userId]);
-}
+const getUserById = async (userId) => {
+  return pool.query(`select u from users u where id = ?`, [userId]);
+};
 
-const roleCheckHelper = async(userId) => {
-    return pool.query(`select roles from User where id = ?`, [userId]);
-}
+const roleCheckHelper = async (userId) => {
+  return pool.query(`SELECT roles from users where id = ?`, [userId]);
+};
 
-const getUserByEmail = async(email) => {
-    return pool.query(`select * from User where email = ?`, [email]);
-}
+const getUserByEmail = async (email) => {
+  return pool.query(`SELECT * FROM users WHERE email = ?`, [String(email)]);
+};
 
-const registerNewUser = async(user) => {
-    try {
-        await pool.query(`insert into User (id, name, email, password, role) values(?,?,?,?,?)`
-        [
-            Math.floor(Math.random() * 100000000007),
-            user.name,
-            user.email,
-            user.password,
-            user.role
-        ])
-    } catch (err) {
-        throw new Error ("Problem inserting in database!");
-    }
-}
+const registerNewUser = async (user) => {
+  const { name, email, password, role } = user;
+  console.log(name, email, password, role);
+  try {
 
-const deleteUserById = async(deleteUserId) => {
-    try {
-        await pool.query(`delete from User where id = ?`, [deleteUserId]);
-    } catch (err) {
-        throw new Error ("Database Error! Problem deleting given user...")
-    }
-    
-}
+    await pool.query(
+      "INSERT INTO users(name,email,password,roles) VALUES($1,$2,$3,$4)",  [String(name), String(email), String(password), String(role)]
+    ) 
+  } catch (err) {
+    console.log(err.message);
+    throw new Error("Problem inserting in database!");
+  }
+};
+
+const deleteUserById = async (deleteUserId) => {
+  try {
+    await pool.query(`delete from users where id = ?`, [deleteUserId]);
+  } catch (err) {
+    throw new Error("Database Error! Problem deleting given user...");
+  }
+};
 
 module.exports = {
-    getUserById,
-    roleCheckHelper,
-    getUserByEmail,
-    registerNewUser,
-    deleteUserById
-}
+  getUserById,
+  roleCheckHelper,
+  getUserByEmail,
+  registerNewUser,
+  deleteUserById,
+};
