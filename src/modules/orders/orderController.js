@@ -4,16 +4,14 @@ const orderService = require("./orderService");
  * Update order status
 */
 const updateStatus = async(req, res) => {
-    const token = req.header("auth-token");
-    const authObj = jwt.verify(token, process.env.JWT_KEY);
 
     let data = {};
-    data.productId = req.params.id;
-    data.orderStatus = req.body.orderStatus;
-    data.userId = authObj.userId;
+    data.orderId = req.params.orderId;
+    data.orderStatus = req.body.status;
+    data.userId = req.userId;
 
     console.log("Updating order ...");
-    console.log(...data);
+    console.log(data);
 
     try {
         await orderService.updateOrderStatus(data); 
