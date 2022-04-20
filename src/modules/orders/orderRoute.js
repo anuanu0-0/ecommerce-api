@@ -1,8 +1,8 @@
 const router = require('express').Router();
-
+const {validate} = require("./../middleware/authenticate");
 const orderController = require("./orderController");
 
-router.patch("/:productId", orderController.updateStatus);
+router.patch("/update/:orderId", validate, orderController.updateStatus);
 
 module.exports = router;
 
