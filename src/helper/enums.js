@@ -1,23 +1,23 @@
 module.exports = {
     ProductStatus: {
-        DRAFT: 0,
-        INACTIVE: 1,
-        ACTIVE: 2,
-        READY_FOR_LISTING: 3,
+        DRAFT: 'DRAFT',
+        INACTIVE: 'INACTIVE',
+        ACTIVE: 'ACTIVE',
+        READY_FOR_LISTING: 'READY_FOR_LISTING',
     },
 
     OrderStatus: {
-        ACTIVE: 0,
-        INACTIVE: 1,
-        PROCESSED: 2,
-        RETURN: 3,
-        EXCHANGE: 4,
-        REFUND: 5
+        ACTIVE: 'ACTIVE',
+        INACTIVE: 'INACTIVE',
+        PROCESSED: 'PROCESSED',
+        RETURN: 'RETURN',
+        EXCHANGE: 'EXCHANGE',
+        REFUND: 'REFUND'
     },
 
     UserRoles: {
-        SHOPPER: 0,
-        VENDOR: 1,
-        ADMIN: 2,
+        SHOPPER: 'SHOPPER',
+        VENDOR: 'VENDOR',
+        ADMIN: 'ADMIN',
     }
 };
