@@ -2,17 +2,15 @@ const pool = require("../../config/dbConfig");
 const { ProductStatus } = require("../../helper/enums");
 
 const productExists = async(productId) => {
-    return pool.query(`select p from Product p where id = ?`, [productId]) != null;
+    return pool.query("SELECT p FROM products p WHERE id = $1", [productId]) != null;
 }
 
-const createNewProduct = (product) => {
+const createNewProduct = async(product) => {
     const {title, pictureUrl, status, price, userId} = product;
-    const randomId = Math.floor(Math.random() * 100000000007);
 
     await pool.query(
-        `insert into Product (id, status, title, picture_url, price, created_by) values(?,?,?,?,?,?)`,
+        "INSERT INTO products (status, title, picture_url, price, created_by) VALUES($1,$2,$3,$4,$5)",
         [
-          randomId,
           status,
           title,
           pictureUrl,
@@ -23,22 +21,22 @@ const createNewProduct = (product) => {
 }
 
 const deleteProductById = async(productId) => {
-    await pool.query(`delete from Product where id = ?`, [productId]);
+    await pool.query("DELETE FROM products WHERE id = $1", [productId]);
 }
 
 const updateProductStatus = async(productStatus, productId) => {
-    await pool.query(`update Product set status = ? where id = ?`, [productStatus, productId]);
+    await pool.query("UPDATE products SET status = $1 where id = $2", [productStatus, productId]);
 }
 
 const updateProductById = async(product) => {
     const {productId, productStatus, title, pictureUrl, price, userId:createdBy} = product;
 
-    await pool.query(`update Product set status = ?, title = ?, picture_url = ?, price = ?, created_by where id = ?`, 
+    await pool.query("UPDATE products SET status = $1, title = $2, picture_url = $3, price = $4, created_by = $5 where id = $6", 
     [productStatus, title, pictureUrl, price, createdBy, productId]);
 }
 
 const getProductPriceForGivenId = async(productId) => {
-    return pool.query(`select price from Product where id = ?`, [productId]);
+    return pool.query("SELECT price FROM products WHERE id = $1", [productId]);
 }
 
 module.exports = {
