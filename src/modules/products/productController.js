@@ -3,20 +3,12 @@ var jwt = require("jsonwebtoken");
 
 const productService = require("./productService");
 
-const getUserData = (req) => {
-    const token = req.header("auth-token");
-    return jwt.verify(token, process.env.JWT_KEY);
-}
-
 const createProduct = async (req, res) => {
-    const userData = getUserData(req);
-    
     let productData = {};
     productData.title = req.body.title;
-    productData.pictureUrl = req.body.pictureUrll
-    productData.status = req.body.status;
+    productData.pictureUrl = req.body.pictureUrl
     productData.price = req.body.price;
-    productData.userId = userData.userId;
+    productData.userId = req.userId;
 
     try {
         await productService.createProduct(productData);
@@ -35,15 +27,17 @@ const createProduct = async (req, res) => {
 };
 
 const updateProduct = async (req, res) => {
-    const userData = getUserData(req);
+
+    // TODO: Improvements -> If only one field is passed, get the other fields from the db
+    // and run the query for whole
 
     let data = {
         productId: req.params.productId,
-        productStatus : req.body.productStatus,
+        productStatus : req.body.status,
         title: req.body.title,
         pictureUrl: req.body.pictureUrl,
         price: req.body.price,
-        userId: userData.userId
+        userId : req.userId
     };
 
     try {
@@ -62,12 +56,14 @@ const updateProduct = async (req, res) => {
 };
 
 const updateProductStatus = async (req, res) => {
-    const userData = getUserData(req);
 
     let data = {};
-    data.productStatus = req.body.productStatus;
-    data.productId = req.body.productId;
-    data.userId = userData.userId;
+    data.productStatus = req.body.status;
+    data.productId = req.params.productId;
+    data.userId = req.userId;
+
+    console.log(data)
+
 
     try {
         await productService.updateProductStatus(data);
@@ -85,17 +81,16 @@ const updateProductStatus = async (req, res) => {
 }
 
 const deleteProduct = async (req, res) => {
-    const userData = getUserData(req);
 
     let data = {};
     data.productId = req.params.productId;
-    data.userId = userData.userId;
+    data.userId = req.userId;
 
     try {
         await productService.deleteProduct(data);
         res.status(200).json({
             success: 1,
-            message: "Product created successfully"
+            message: "Product deleted successfully"
         });
     } catch (err) {
         console.log(err.message);
@@ -107,10 +102,9 @@ const deleteProduct = async (req, res) => {
 };
 
 const buyProduct = async (req, res) => {
-    const userData = getUserData(req);
 
     let data = {
-        userId: userData.userId,
+        userId : req.userId,
         productIds: req.body.productIds
     };  
 
