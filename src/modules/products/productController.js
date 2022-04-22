@@ -11,7 +11,11 @@ const createProduct = async (req, res) => {
     productData.userId = req.userId;
 
     try {
-        await productService.createProduct(productData);
+        const response = await productService.createProduct(productData);
+        const {error} = response;
+        if(error) {
+            throw error;
+        }
         res.status(200).json({
             success: 1,
             message: "Product created successfully"
@@ -20,7 +24,7 @@ const createProduct = async (req, res) => {
         console.log(err.message);
         res.status(400).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 
@@ -41,7 +45,11 @@ const updateProduct = async (req, res) => {
     };
 
     try {
-        await productService.updateProduct(data);
+        const resposne = await productService.updateProduct(data);
+        const {error} = resposne;
+        if(error) {
+            throw error;
+        }
         res.status(200).json({
             success: 1,
             message: "Product updated successfully"
@@ -50,7 +58,7 @@ const updateProduct = async (req, res) => {
         console.log(err.message);
         res.status(500).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 };
@@ -64,9 +72,12 @@ const updateProductStatus = async (req, res) => {
 
     console.log(data)
 
-
     try {
-        await productService.updateProductStatus(data);
+        const response = await productService.updateProductStatus(data);
+        const {error} = response;
+        if(error) {
+            throw error;
+        }
         res.status(200).json({
             success: 1,
             message: "Product updated successfully"
@@ -75,7 +86,7 @@ const updateProductStatus = async (req, res) => {
         console.log(err.message);
         res.status(500).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 }
@@ -87,7 +98,10 @@ const deleteProduct = async (req, res) => {
     data.userId = req.userId;
 
     try {
-        await productService.deleteProduct(data);
+        const {error} = await productService.deleteProduct(data);
+        if(error) {
+            throw error;
+        }
         res.status(200).json({
             success: 1,
             message: "Product deleted successfully"
@@ -96,30 +110,34 @@ const deleteProduct = async (req, res) => {
         console.log(err.message);
         res.status(400).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 };
 
 const buyProduct = async (req, res) => {
-
-    let data = {
+    let orderData = {
         userId : req.userId,
         productIds: req.body.productIds
     };  
 
     try {   
-        const totalPrice = await productService.buyProduct(data);
+        const response = await productService.buyProduct(orderData);
+        const {data:totalPrice, error} = response;
+        if(error) {
+            throw error;
+        }
+        
         res.status(200).json({
             success: 1,
-            message: "Product created successfully",
+            message: "Order created successfully",
             price: totalPrice
         });
     } catch (err) {
         console.log(err.message);
         res.status(400).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 };

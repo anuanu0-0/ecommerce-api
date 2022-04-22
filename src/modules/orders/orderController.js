@@ -5,25 +5,32 @@ const orderService = require("./orderService");
 */
 const updateStatus = async(req, res) => {
 
-    let data = {};
-    data.orderId = req.params.orderId;
-    data.orderStatus = req.body.status;
-    data.userId = req.userId;
+    let orderData = {};
+    orderData.orderId = req.params.orderId;
+    orderData.orderStatus = req.body.status;
+    orderData.userId = req.userId;
 
     console.log("Updating order ...");
-    console.log(data);
+    console.log(orderData);
 
     try {
-        await orderService.updateOrderStatus(data); 
+        const response = await orderService.updateOrderStatus(orderData); 
+        const {data, error} = response;
+
+        if(error) {
+            throw error;
+        }
+
         res.status(200).json({
             success: 1,
+            data,
             message: "Order updated successfully"
         });
     } catch(err) {
         console.log(err.message);
         res.status(400).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }  
 }

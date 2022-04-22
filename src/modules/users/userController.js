@@ -5,60 +5,40 @@ var jwt = require("jsonwebtoken");
 const userService = require("./userService");
 require("dotenv").config();
 
-/**
- * Login existing user
- *
- * Example responses:
- * HTTP 200
- * {
-  *     "success": 1,
-        "message": "Logged in successfully",
-        "token" : "bearer_token_xxxxxxxxxxxxxxx"       
- * }
- *
- *
- */
+
 const login = async(req, res) => {
 
     const {email, password} = req.body;
-    console.log(req.body)
-    let data = {
+    let userData = {
         email : email,
         password : password
     };
-    console.log(data);
-    try{
-        const userId = await userService.loginUser(data);
+    try {
+        const response = await userService.loginUser(userData);
+        console.log(response)
+        const {data:userId, error}  = response || {};
+        if(error) {
+           throw error;
+        }
+
         const authToken = jwt.sign({email, userId}, process.env.JWT_KEY, {
             expiresIn:"5h"
         });
-        console.log(authToken);
+
         res.status(200).json({
             success: 1,
             message: "Logged in successfully",
             token: authToken
         })
-    } catch(err) {
-        console.log(" User Controller:" + err.message);
-        res.status(401).json({
+    } catch(error) {
+        res.status(500).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 }
 
-/**
- * Register new user
- *
- * Example responses:
- * HTTP 409
- * {
- *      "success": 0,
-        "message": "Email already exists"
- * }
- * 
- *
- */
+
 const register = async(req, res) => {
     const { name, email, password, role } = req.body;
 
@@ -71,70 +51,60 @@ const register = async(req, res) => {
      * const salt = await genSaltSync(10);
      * user.password = await hashSync(password, salt);
      * */    
-
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         user.password = hashedPassword;
 
-    }
-    catch(err) {
-        console.log(err.message);
+    } catch(err) {
+        res.status(409).json({
+            success: 0,
+            error: err.message
+        });
     }
 
     try {
-        const userId = await userService.registerUser(user);
+        const response = await userService.registerUser(user);
+        const {data:userId, error} = response;
+        if(error) {
+            throw error;
+        }
         const token = jwt.sign({email, userId}, process.env.JWT_KEY);
         res.status(200).json({
             success: 1,
             message: "User created successfully!",
-            token
+            token,
         });
     } catch(err) {
-        console.log(err.message);
+        // console.log(err.message);
         res.status(409).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
-    
 }
 
-/**
- * Delete user - Admin operation
- *
- * Example responses:
- * HTTP 200
- * {    
- *      "success": 1,
-        "message": "User deleted successfully!"
- * }
- *
- * HTTP 401
- * {
- *      "success": 0,
-        "message": "Unauthorized access! Only admin allowed.."
- * }
- *
- */
 const deleteUser = async(req, res) => {
-    let data = {
+    let userData = {
         userId : req.userId,
         deleteUserId : req.params.userId
     };
 
-    console.log(data);
-
     try {
-        await userService.deleteUserByAdmin(data);
+        const response = await userService.deleteUserByAdmin(userData);
+        const {data, error} = response;
+        if(error) {
+            throw error;
+        }
         res.status(200).json({
             success: 1,
+            error: data,
             message: "User deleted successfully!"
         });
     } catch (err) {
         console.log(err.message);
         res.status(401).json({
             success: 0,
-            message: err.message
+            error: err
         });
     }
 } 
