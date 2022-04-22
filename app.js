@@ -15,7 +15,6 @@ app.use(cors());
 app.get('/', (req, res) => res.status(200).json({
     success: 1,
     message: 'This is the home page',
-    req
 }));
 
 app.use('/api/order', jsonParser, orderRoute);
